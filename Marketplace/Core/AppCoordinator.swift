@@ -23,7 +23,7 @@ final class AppCoordinator: Coordinator {
     
     // MARK: - Methods
     func start() {
-        startMainFlow()
+        startLoginFlow()
     }
     
     // MARK: - private Methods
@@ -33,21 +33,11 @@ final class AppCoordinator: Coordinator {
 // MARK: - Flows
 extension AppCoordinator {
     
-    private func startMainFlow() {
-        let view = ViewController()
-        navigationController.pushViewController(view, animated: false)
-//        let module = MovieAssembly.buildModule()
-//        let view = module.view
-//        let output = module.output
-//
-//        output.sink { output in
-//            switch output {
-//
-//            }
-//        }
-//        .store(in: &cancellables)
-//
-//        navigationController.viewControllers = [view]
+    private func startLoginFlow() {
+        let coordinator = AuthFlowCoordinator(navigationController: navigationController,
+                                              delegate: self)
+        coordinator.start()
+        childCoordinators.append(coordinator)
     }
 }
 
