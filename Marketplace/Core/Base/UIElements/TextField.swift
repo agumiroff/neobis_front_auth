@@ -8,35 +8,31 @@
 import UIKit
 import SnapKit
 
-final class BaseTextField: UIView {
+final class TextFieldView: UIView {
     
     // MARK: - Properties
     private var textFieldName: String
-    
-    private lazy var textField: UITextField = {
-        let textField = UITextField()
-        textField.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
-        let bottomLine = CALayer()
-        bottomLine.frame = CGRect(x: 0,
-                                  y: textField.frame.size.height - Constants.borderWidth,
-                                  width: textField.frame.size.width,
-                                  height: Constants.borderWidth)
-        bottomLine.backgroundColor = UIColor.black.cgColor
-        textField.layer.addSublayer(bottomLine)
-        return textField
-    }()
+    private let textField: UITextField
+    private let type: FieldType
     
     private lazy var textFieldLabel: UILabel = {
         let label = UILabel()
-        label.text = "dsdsddsds"
-        label.textColor = .black
+        label.textColor = UIColor(hexString: "#C0C0C0")
         return label
     }()
     
+    private let paddingForText = UIEdgeInsets(top: 32,
+                                              left: 10,
+                                              bottom: 9,
+                                              right: 30)
+    
     // MARK: - Init
-    init(textFieldName: String) {
+    init(textFieldName: String, textField: UITextField, type: FieldType) {
         self.textFieldName = textFieldName
+        self.textField = textField
+        self.type = type
         super.init(frame: CGRect())
+        textField.delegate = self
         setupUI()
     }
     
@@ -48,17 +44,50 @@ final class BaseTextField: UIView {
     private func setupUI() {
         
         addSubview(textFieldLabel)
-        self.textField.placeholder = textFieldName
+        self.textFieldLabel.text = textFieldName
         textFieldLabel.snp.makeConstraints { make in
             make.top.equalToSuperview()
             make.horizontalEdges.equalToSuperview()
         }
         
         addSubview(textField)
+        self.textField.placeholder = textFieldName
+        textFieldLabel.isHidden = true
         textField.snp.makeConstraints { make in
             make.top.equalTo(textFieldLabel.snp.bottom).offset(Constants.textFieldTop)
-            make.horizontalEdges.bottom.equalToSuperview()
+            make.horizontalEdges.equalToSuperview()
+            make.bottom.equalToSuperview().inset(Constants.textFieldbottom)
         }
+    }
+}
+
+extension TextFieldView: UITextFieldDelegate {
+    
+    func textFieldDidBeginEditing(_ textField: UITextField) {
+        textFieldLabel.isHidden = false
+        textField.placeholder = ""
+    }
+    
+    func textFieldDidEndEditing(_ textField: UITextField) {
+        guard let text = textField.text else { return }
+        if text.isEmpty {
+            textFieldLabel.isHidden = true
+            textField.placeholder = textFieldName
+        }
+    }
+    
+    func textField(_ textField: UITextField,
+                   shouldChangeCharactersIn range: NSRange,
+                   replacementString string: String) -> Bool {
+        switch type {
+        case .onlyLetters, .password:
+            let allowedCharacters = CharacterSet.letters
+            let characterSet = CharacterSet(charactersIn: string)
+            return characterSet.isSubset(of: allowedCharacters) || string.isEmpty
+        case .email:
+            break
+        }
+        return true
     }
 }
 
@@ -66,7 +95,13 @@ fileprivate extension Constants {
         
     // Constraints
     static let textFieldTop: CGFloat = 12.5
-    
-    // Other
-    static let borderWidth: CGFloat = 1
+    static let textFieldbottom: CGFloat = 10.5
+}
+
+extension TextFieldView {
+    enum FieldType {
+        case onlyLetters
+        case password
+        case email
+    }
 }

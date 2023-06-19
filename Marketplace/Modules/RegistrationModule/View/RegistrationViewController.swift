@@ -1,26 +1,22 @@
 //
-//  LoginVC.swift
+//  RegistrationViewController.swift
 //  Marketplace
 //
-//  Created by G G on 15.06.2023.
+//  Created by G G on 16.06.2023.
 //
 
-import Combine
 import UIKit
 import SnapKit
 
-final class LoginViewController: BaseViewController {
+final class RegistrationViewController: BaseViewController {
     
     // MARK: - Properties
-    private let viewModel: any LoginViewModel
-    private var cancellables = Set<AnyCancellable>()
-    private let loginField = UITextField()
-    private let passwordField = UITextField()
-    private var loginFieldView: TextFieldView
-    private var passwordFieldView: TextFieldView
+    private let viewModel: any RegistrationViewModel
+    private let nameField = UITextField()
+    private let emailField = UITextField()
+    private var nameFieldView: TextFieldView
+    private var emailFieldView: TextFieldView
     private let filledButton = FilledButton(title: Constants.title)
-    private lazy var isSecureText = true
-    private var notificationConstraint: Constraint?
     
     private lazy var marketLogo: UIImageView = {
         let imageView = UIImageView()
@@ -42,29 +38,25 @@ final class LoginViewController: BaseViewController {
         return button
     }()
     
-    private lazy var hidePasswordButton: UIButton = {
-        let button = UIButton()
-        button.setImage(UIImage(named: Constants.showPasswordImageName), for: .normal)
-        return button
-    }()
-    
     // MARK: - viewDidLoad
     override func viewDidLoad() {
         super.viewDidLoad()
         subcribe()
-        configureTextField(loginFieldView)
-        configureTextField(passwordFieldView)
+        configureTextField(nameFieldView)
+        configureTextField(emailFieldView)
+        navigationController?.isToolbarHidden = true
+        navigationController?.isNavigationBarHidden = true
     }
     
     // MARK: - Init
-    init(viewModel: any LoginViewModel) {
+    init(viewModel: any RegistrationViewModel) {
         self.viewModel = viewModel
-        loginFieldView = TextFieldView(textFieldName: "login",
-                                       textField: loginField,
-                                       type: .onlyLetters)
-        passwordFieldView = TextFieldView(textFieldName: "password",
-                                          textField: passwordField,
-                                          type: .password)
+        nameFieldView = TextFieldView(textFieldName: Constants.nameFieldName,
+                                      textField: nameField,
+                                      type: .onlyLetters)
+        emailFieldView = TextFieldView(textFieldName: Constants.emailFieldName,
+                                       textField: emailField,
+                                       type: .email)
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -72,8 +64,19 @@ final class LoginViewController: BaseViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
-    deinit {
-        cancellables.forEach { $0.cancel() }
+    // MARK: - NavigationSetup
+    override func navigationSetup() {
+        super.navigationSetup()
+        navigationController?.isToolbarHidden = false
+        navigationController?.isNavigationBarHidden = false
+        
+        navigationItem.title = Constants.registrationNavigationName
+        let backButtonImage = UIImage(named: Constants.backButtonImageName)?.withRenderingMode(.alwaysOriginal)
+        let backButton = UIBarButtonItem(image: backButtonImage,
+                                         style: .plain,
+                                         target: self,
+                                         action: #selector(backAction))
+        navigationItem.leftBarButtonItem = backButton
     }
     
     // MARK: - SetupUI
@@ -94,45 +97,30 @@ final class LoginViewController: BaseViewController {
             make.top.equalTo(marketLogo.snp.bottom).offset(Constants.marketLabelTopOffset)
         }
         
-        contentView.addSubview(loginFieldView)
-        loginFieldView.snp.makeConstraints { make in
+        contentView.addSubview(nameFieldView)
+        nameFieldView.snp.makeConstraints { make in
             make.top.equalTo(marketLabel.snp.bottom).offset(Constants.loginFieldViewTopOffset)
             make.horizontalEdges.equalToSuperview().inset(Constants.horizontalInsets)
         }
         
-        contentView.addSubview(passwordFieldView)
-        passwordField.isSecureTextEntry = true
-        passwordFieldView.snp.makeConstraints { make in
-            make.top.equalTo(loginField.snp.bottom).offset(Constants.passwordFieldViewTopOffset)
+        contentView.addSubview(emailFieldView)
+        emailFieldView.snp.makeConstraints { make in
+            make.top.equalTo(nameField.snp.bottom).offset(Constants.passwordFieldViewTopOffset)
             make.horizontalEdges.equalToSuperview().inset(Constants.horizontalInsets)
-        }
-        
-        passwordFieldView.addSubview(hidePasswordButton)
-        hidePasswordButton.addTarget(self, action: #selector(hidePassword), for: .touchUpInside)
-        hidePasswordButton.snp.makeConstraints { make in
-            make.trailing.equalToSuperview()
-            make.bottom.equalToSuperview().inset(Constants.hidePasswordButtonBottomInset)
         }
         
         contentView.addSubview(filledButton)
         filledButton.updateAppearance(isEnabled: false)
         filledButton.addTarget(self, action: #selector(submit), for: .touchUpInside)
         filledButton.snp.makeConstraints { make in
-            make.top.equalTo(passwordField.snp.bottom).offset(Constants.filledButtonTopOffset)
+            make.top.equalTo(emailField.snp.bottom).offset(Constants.filledButtonTopOffset)
             make.horizontalEdges.equalToSuperview().inset(Constants.horizontalInsets)
-        }
-        
-        contentView.addSubview(registerButton)
-        registerButton.addTarget(self, action: #selector(register), for: .touchUpInside)
-        registerButton.snp.makeConstraints { make in
-            make.horizontalEdges.equalToSuperview()
-            make.top.equalTo(filledButton).offset(Constants.registerButtonTopOffset)
-            make.bottom.equalToSuperview().inset(Constants.registerButtonBottomInset)
+            make.bottom.equalToSuperview()
         }
         
         view.layoutIfNeeded()
     }
-
+    
     
     // MARK: - Private methods
     private func configureTextField(_ view: UIView) {
@@ -142,55 +130,36 @@ final class LoginViewController: BaseViewController {
         view.layer.addSublayer(bottomLine)
     }
     
-    @objc func hidePassword() {
-        passwordField.isSecureTextEntry.toggle()
-        hidePasswordButton.setImage(UIImage(
-            named: passwordField.isSecureTextEntry ? Constants.showPasswordImageName : Constants.hidePasswordImageName
-        ), for: .normal)
-    }
-    
     private func subcribe() {
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(textDidChange),
                                                name: UITextField.textDidChangeNotification,
                                                object: nil)
-        
-        viewModel.gState
-            .bind { state in
-                switch state {
-                case .initial:
-                    print("initial")
-                case .loading:
-                    print("loading")
-                }
-            }
     }
     
     @objc private func textDidChange() {
-        if loginField.text?.count ?? 0 > 5 && passwordField.text?.count ?? 0 > 5 {
+        guard let name = nameField.text, let email = emailField.text else { return }
+        if name.count > 5 && email.count > 5 && email.isValidEmail() {
             filledButton.updateAppearance(isEnabled: true)
         } else {
             filledButton.updateAppearance(isEnabled: false)
         }
     }
     
-    @objc private func submit() {
-    }
+    @objc private func submit() { }
     
-    @objc private func register() {
-        showNotification(text: "dsjdakldsdjklas", type: .success)
-        viewModel.sendEvent(.signUp)
-    }
+    @objc private func backAction() {}
 }
 
 // MARK: - Events
-extension LoginViewController {
+extension RegistrationViewController {
     enum Event {
-        case signIn
-        case signUp
-        case resetState
+        case checkCredentials
     }
 }
 
-// MARK: - Constants
-fileprivate extension Constants {}
+fileprivate extension Constants {
+    
+    // Strings
+    static let registrationNavigationName = "Регистрация"
+}

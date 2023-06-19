@@ -14,6 +14,7 @@ class BaseViewController: UIViewController {
     // MARK: - Properties
     let scrollView = UIScrollView()
     let contentView = UIView()
+    var notificationView = NotificationView()
     
     // MARK: - ViewDidLoad
     override func viewDidLoad() {
@@ -24,14 +25,36 @@ class BaseViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationSetup()
+        notificationView.transform = CGAffineTransform(translationX: 0,
+                                                       y: -notificationView.bounds.height)
     }
     
     func setupUI() {
         
-        scrollViewSetup()
-        contentViewSetup()
         keyboardNotificationSetup()
         view.backgroundColor = .systemBackground
+        
+        view.addSubview(scrollView)
+        scrollView.isDirectionalLockEnabled = true
+        scrollView.showsVerticalScrollIndicator = false
+        scrollView.contentSize = .zero
+        scrollView.bounces = false
+        scrollView.snp.makeConstraints { make in
+            make.edges.equalTo(view.safeAreaLayoutGuide)
+        }
+        
+        scrollView.addSubview(contentView)
+        contentView.snp.makeConstraints { make in
+            make.edges.equalTo(scrollView.snp.edges)
+            make.width.equalTo(scrollView.snp.width)
+        }
+        
+        scrollView.addSubview(notificationView)
+        notificationView.snp.makeConstraints { make in
+            make.top.equalToSuperview()
+            make.horizontalEdges.equalToSuperview().inset(Constants.horizontalInsets)
+            make.height.equalTo(60)
+        }
     }
     
     func navigationSetup() {
@@ -42,28 +65,6 @@ class BaseViewController: UIViewController {
 
 // MARK: - SetupViews
 extension BaseViewController {
-    
-    func scrollViewSetup() {
-        view.addSubview(scrollView)
-        
-        scrollView.isDirectionalLockEnabled = true
-        scrollView.showsVerticalScrollIndicator = false
-        scrollView.contentSize = .zero
-        scrollView.bounces = false
-        
-        scrollView.snp.makeConstraints { make in
-            make.edges.equalTo(view.safeAreaLayoutGuide)
-        }
-    }
-    
-    func contentViewSetup() {
-        scrollView.addSubview(contentView)
-        
-        contentView.snp.makeConstraints { make in
-            make.edges.equalTo(scrollView.snp.edges)
-            make.width.equalTo(scrollView.snp.width)
-        }
-    }
     
     private func keyboardNotificationSetup() {
         let notificationCenter = NotificationCenter.default
@@ -81,7 +82,6 @@ extension BaseViewController {
     }
     
     @objc func keyboarDidAppear(notification: Notification) {
-        print("didAppear")
         guard let info = notification.userInfo,
               let keyboardFrameValue = info[UIResponder.keyboardFrameBeginUserInfoKey] as? NSValue else { return }
         
@@ -103,9 +103,26 @@ extension BaseViewController {
     }
     
     @objc func keyboardDidDissappear(_ notification: NSNotification) {
-        print("didDisappear")
         let contentInsets = UIEdgeInsets.zero
         scrollView.contentInset = contentInsets
         scrollView.scrollIndicatorInsets = contentInsets
+    }
+    
+    func showNotification(text: String, type: NotificationType) {
+        self.notificationView.configure(text: text, type: type)
+        UIView.animate(withDuration: 1,
+                       delay: 0) { [notificationView] in
+            notificationView.transform = CGAffineTransform.identity
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: {
+            UIView.animate(withDuration: 1,
+                           delay: 0.0,
+                           options: .transitionFlipFromTop) { [weak self] in
+                guard let self else { return }
+                self.notificationView.transform = CGAffineTransform(translationX: 0,
+                                                                    y: -notificationView.bounds.height)
+            }
+        })
     }
 }
