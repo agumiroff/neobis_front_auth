@@ -14,8 +14,8 @@ typealias LoginOutput = LoginViewModelImpl.Output
 
 protocol LoginViewModel {
     associatedtype InputType
-    var input: InputType { get set }
-    var state: AnyPublisher<LoginState, Never> { get }
+    var input: InputType { get }
     var output: AnyPublisher<LoginOutput, Never> { get }
+    var state: AnyPublisher<LoginState, Never> { get }
     func sendEvent(_ event: LoginEvent)
 }

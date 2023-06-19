@@ -8,8 +8,6 @@
 import Foundation
 import Combine
 
-
-
 class LoginViewModelImpl: LoginViewModel {
     
     // MARK: - Properties
@@ -33,6 +31,7 @@ class LoginViewModelImpl: LoginViewModel {
 extension LoginViewModelImpl {
     enum State {
         case initial
+        case loading
     }
     
     enum Output {
@@ -40,6 +39,37 @@ extension LoginViewModelImpl {
     }
     
     func sendEvent(_ event: LoginEvent) {
-        
+        switch event {
+        case .signIn:
+            break
+        case .signUp:
+            _output.send(.registrationRouteAsked)
+        case .resetState:
+            _state.send(.initial)
+        }
     }
 }
+
+//final class Binder {
+//    private var listener: ((LoginState) -> Void)?
+//
+//    var value: LoginState {
+//        didSet { fireOnMainThread() }
+//    }
+//
+//    init(_ value: LoginState) {
+//        self.value = value
+//    }
+//
+//    func bind(_ listener: @escaping (LoginState) -> Void) {
+//        self.listener = listener
+//        fireOnMainThread()
+//    }
+//
+//    private func fireOnMainThread() {
+//        DispatchQueue.main.async { [weak self] in
+//            guard let self, let listener = self.listener else { return }
+//            listener(self.value)
+//        }
+//    }
+//}

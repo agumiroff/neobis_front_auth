@@ -53,5 +53,13 @@ final class AuthFlowCoordinator: Coordinator {
     }
     
     // RegistrationScreen
-    private func showRegistrationScreen() {}
+    private func showRegistrationScreen() {
+        let module = RegistrationModuleAssembly.buildModule(dependencies: .init(), payload: .init())
+        let view = module.view
+        module.output
+            .sink {_ in }
+            .store(in: &cancellables)
+        
+        navigationController.pushViewController(view, animated: true)
+    }
 }
