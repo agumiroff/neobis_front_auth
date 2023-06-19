@@ -11,7 +11,6 @@ import Combine
 class LoginViewModelImpl: LoginViewModel {
     
     // MARK: - Properties
-    var gState = Binder(.initial)
     var state: AnyPublisher<LoginState, Never> {
         _state.eraseToAnyPublisher()
     }
@@ -44,8 +43,7 @@ extension LoginViewModelImpl {
         case .signIn:
             break
         case .signUp:
-            gState.value = .loading
-//            _output.send(.registrationRouteAsked)
+            _output.send(.registrationRouteAsked)
         case .resetState:
             _state.send(.initial)
         }
@@ -54,20 +52,20 @@ extension LoginViewModelImpl {
 
 //final class Binder {
 //    private var listener: ((LoginState) -> Void)?
-//    
+//
 //    var value: LoginState {
 //        didSet { fireOnMainThread() }
 //    }
-//    
+//
 //    init(_ value: LoginState) {
 //        self.value = value
 //    }
-//    
+//
 //    func bind(_ listener: @escaping (LoginState) -> Void) {
 //        self.listener = listener
 //        fireOnMainThread()
 //    }
-//    
+//
 //    private func fireOnMainThread() {
 //        DispatchQueue.main.async { [weak self] in
 //            guard let self, let listener = self.listener else { return }

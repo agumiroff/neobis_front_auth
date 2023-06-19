@@ -18,5 +18,4 @@ protocol LoginViewModel {
     var output: AnyPublisher<LoginOutput, Never> { get }
     var state: AnyPublisher<LoginState, Never> { get }
     func sendEvent(_ event: LoginEvent)
-    var gState: Binder { get }
 }

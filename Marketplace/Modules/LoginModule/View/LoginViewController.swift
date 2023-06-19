@@ -154,16 +154,6 @@ final class LoginViewController: BaseViewController {
                                                selector: #selector(textDidChange),
                                                name: UITextField.textDidChangeNotification,
                                                object: nil)
-        
-        viewModel.gState
-            .bind { state in
-                switch state {
-                case .initial:
-                    print("initial")
-                case .loading:
-                    print("loading")
-                }
-            }
     }
     
     @objc private func textDidChange() {
